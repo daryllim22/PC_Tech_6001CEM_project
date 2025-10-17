@@ -1,0 +1,105 @@
+/* General body styling */
+body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    background-image: url("images/bg.png");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    font-family: Arial, sans-serif;
+}
+
+/* Sidebar navigation */
+.navbar {
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 20px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; /* center all buttons vertically */
+    gap: 10px;
+    width: 120px;
+    height: 100vh;
+}
+
+.navbar a {
+    background-color: #f2f4d7;
+    border-radius: 6px;
+    padding: 8px;
+    text-align: center;
+    color: #333;
+    text-decoration: none;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.navbar a:hover {
+    background-color: #e0e6b8;
+    transform: scale(1.05);
+}
+
+.navbar img {
+    width: 35px;
+    height: 35px;
+    margin-bottom: 5px;
+    display: block;
+}
+
+/* Main content area */
+.content {
+    flex: 1;
+    padding: 30px;
+    overflow-y: auto;
+}
+
+/* Event card styles (shared by events.php and past_events.php) */
+.card {
+    border-radius: 10px;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+}
+
+.card-img-top {
+    height: 220px; /* fixed height for uniformity */
+    object-fit: cover; /* crops image nicely */
+    border-bottom: 3px solid #dee2e6;
+    border-radius: 10px 10px 0 0;
+}
+
+/* Card content */
+.card-body {
+    text-align: center;
+}
+
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.card-text {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* Modal poster */
+.modal-poster {
+    width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+    margin-bottom: 15px;
+}
+
+/* Adjust row spacing */
+.row {
+    margin-left: 0;
+    margin-right: 0;
+}
