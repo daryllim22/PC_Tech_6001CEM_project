@@ -2,146 +2,271 @@
 session_start();
 include 'connection.php';
 
-// Redirect non-admin users to home
+// Redirect non-admin users
 if (!isset($_SESSION['user_mail'])) {
     header("Location: login.php");
     exit;
 }
-
-// Optional: restrict access to admin only if role column exists
 if (isset($_SESSION['role']) && $_SESSION['role'] !== 'admin') {
     header("Location: home.php");
     exit;
 }
 
-// Fetch users and products
-$users_result = $conn->query("SELECT * FROM users");
-$products_result = $conn->query("SELECT * FROM products");
-$total_users = $users_result->num_rows;
-$total_products = $products_result->num_rows;
+// --- ADD PRODUCT ---
+if (isset($_POST['add_product'])) {
+    $name = $_POST['name'];
+    $price = $_POST['price'];
+    $desc = $_POST['description'];
+    $image = $_FILES['image']['name'];
+    $target = "uploads/" . basename($image);
+    move_uploaded_file($_FILES['image']['tmp_name'], $target);
+
+    $stmt = $conn->prepare("INSERT INTO products (name, description, price, image, created_at) VALUES (?, ?, ?, ?, NOW())");
+    $stmt->bind_param("ssds", $name, $desc, $price, $image);
+    $stmt->execute();
+    header("Location: admin_dashboard.php");
+    exit;
+}
+
+// --- EDIT PRODUCT ---
+if (isset($_POST['edit_product'])) {
+    $id = $_POST['id'];
+    $name = $_POST['name'];
+    $price = $_POST['price'];
+    $desc = $_POST['description'];
+
+    if (!empty($_FILES['image']['name'])) {
+        $image = $_FILES['image']['name'];
+        $target = "uploads/" . basename($image);
+        move_uploaded_file($_FILES['image']['tmp_name'], $target);
+        $stmt = $conn->prepare("UPDATE products SET name=?, description=?, price=?, image=? WHERE id=?");
+        $stmt->bind_param("ssdsi", $name, $desc, $price, $image, $id);
+    } else {
+        $stmt = $conn->prepare("UPDATE products SET name=?, description=?, price=? WHERE id=?");
+        $stmt->bind_param("ssdi", $name, $desc, $price, $id);
+    }
+    $stmt->execute();
+    header("Location: admin_dashboard.php");
+    exit;
+}
+
+// --- DELETE PRODUCT ---
+if (isset($_GET['delete_product'])) {
+    $id = $_GET['delete_product'];
+    $stmt = $conn->prepare("DELETE FROM products WHERE id=?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    header("Location: admin_dashboard.php");
+    exit;
+}
+
+// --- ADD USER ---
+if (isset($_POST['add_user'])) {
+    $name = $_POST['full_name'];
+    $email = $_POST['email'];
+    $pass = password_hash($_POST['password'], PASSWORD_DEFAULT);
+    $role = $_POST['role'] ?? 'user';
+    $stmt = $conn->prepare("INSERT INTO users (full_name, email, password, role) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("ssss", $name, $email, $pass, $role);
+    $stmt->execute();
+    header("Location: admin_dashboard.php");
+    exit;
+}
+
+// --- EDIT USER ---
+if (isset($_POST['edit_user'])) {
+    $id = $_POST['id'];
+    $name = $_POST['full_name'];
+    $email = $_POST['email'];
+    $role = $_POST['role'];
+    $stmt = $conn->prepare("UPDATE users SET full_name=?, email=?, role=? WHERE id=?");
+    $stmt->bind_param("sssi", $name, $email, $role, $id);
+    $stmt->execute();
+    header("Location: admin_dashboard.php");
+    exit;
+}
+
+// --- DELETE USER ---
+if (isset($_GET['delete_user'])) {
+    $id = $_GET['delete_user'];
+    $stmt = $conn->prepare("DELETE FROM users WHERE id=?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    header("Location: admin_dashboard.php");
+    exit;
+}
+
+// Fetch users & products
+$users = $conn->query("SELECT * FROM users");
+$products = $conn->query("SELECT * FROM products");
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Admin Dashboard - PC Tech</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .navbar img {
-            height: 50px;
-        }
-        .card {
-            border-radius: 12px;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
-        }
-        .card:hover {
-            transform: translateY(-5px);
-        }
-        table img {
-            height: 50px;
-            width: auto;
-            border-radius: 8px;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Admin Dashboard - PC Tech</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+body { background-color: #f8f9fa; }
+.navbar img { height: 50px; }
+.card { border-radius: 12px; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
+.card:hover { transform: translateY(-3px); }
+table img { height: 50px; border-radius: 8px; }
+</style>
 </head>
 <body>
 
-    <!-- Navigation -->
-    <nav class="navbar d-flex justify-content-center gap-4 py-2 bg-light">
-        <a href="admin_dashboard.php"><img src="images/logo.jpg" alt="PC Tech Logo"></a>
-        <a href="admin_dashboard.php"><img src="images/home.png" alt="Dashboard"></a>
-        <a href="product.php"><img src="images/product.png" alt="Products"></a>
-        <a href="profile.php"><img src="images/user_profile.png" alt="Profile"></a>
-        <a href="logout.php"><img src="images/logout.png" alt="Logout"></a>
-    </nav>
+<!-- Navbar -->
+<nav class="navbar d-flex justify-content-center gap-4 py-2 bg-light">
+  <a href="admin_dashboard.php"><img src="images/logo.jpg" alt="Logo"></a>
+  <a href="product.php"><img src="images/product.png" alt="Products"></a>
+  <a href="logout.php"><img src="images/logout.png" alt="Logout"></a>
+</nav>
 
-    <div class="container mt-5">
-        <h2 class="text-center mb-4">Admin Dashboard</h2>
+<div class="container mt-5">
+  <h2 class="text-center mb-4">Admin Dashboard</h2>
 
-        <!-- Dashboard Cards -->
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="card p-3 text-center bg-primary text-white">
-                    <h4>Total Users</h4>
-                    <h2><?= $total_users ?></h2>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card p-3 text-center bg-success text-white">
-                    <h4>Total Products</h4>
-                    <h2><?= $total_products ?></h2>
-                </div>
-            </div>
-        </div>
-
-        <!-- User Management -->
-        <div class="card mb-4 p-4">
-            <h4 class="mb-3">Registered Users</h4>
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>ID</th>
-                            <th>Full Name</th>
-                            <th>Email</th>
-                            <?php if ($users_result && $users_result->fetch_field_direct(3)->name === 'role'): ?>
-                                <th>Role</th>
-                            <?php endif; ?>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php
-                        $users_result->data_seek(0);
-                        while ($user = $users_result->fetch_assoc()):
-                        ?>
-                        <tr>
-                            <td><?= $user['id'] ?></td>
-                            <td><?= htmlspecialchars($user['full_name']) ?></td>
-                            <td><?= htmlspecialchars($user['email']) ?></td>
-                            <?php if (isset($user['role'])): ?>
-                                <td><?= htmlspecialchars($user['role']) ?></td>
-                            <?php endif; ?>
-                        </tr>
-                        <?php endwhile; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Product Management -->
-        <div class="card p-4">
-            <h4 class="mb-3">Product List</h4>
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>ID</th>
-                            <th>Image</th>
-                            <th>Name</th>
-                            <th>Price (RM)</th>
-                            <th>Created At</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php while ($product = $products_result->fetch_assoc()): ?>
-                        <tr>
-                            <td><?= $product['id'] ?></td>
-                            <td><img src="uploads/<?= htmlspecialchars($product['image']) ?>" alt="<?= htmlspecialchars($product['name']) ?>"></td>
-                            <td><?= htmlspecialchars($product['name']) ?></td>
-                            <td><?= number_format($product['price'], 2) ?></td>
-                            <td><?= $product['created_at'] ?></td>
-                        </tr>
-                        <?php endwhile; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+  <!-- Users Section -->
+  <div class="card mb-4 p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4>Registered Users</h4>
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">+ Add User</button>
     </div>
+    <table class="table table-striped text-center align-middle">
+      <thead class="table-dark"><tr><th>ID</th><th>Full Name</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead>
+      <tbody>
+        <?php while ($u = $users->fetch_assoc()): ?>
+        <tr>
+          <td><?= $u['id'] ?></td>
+          <td><?= htmlspecialchars($u['full_name']) ?></td>
+          <td><?= htmlspecialchars($u['email']) ?></td>
+          <td><?= htmlspecialchars($u['role']) ?></td>
+          <td>
+            <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editUserModal<?= $u['id'] ?>">Edit</button>
+            <a href="?delete_user=<?= $u['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Delete this user?')">Delete</a>
+          </td>
+        </tr>
+        <!-- Edit User Modal -->
+        <div class="modal fade" id="editUserModal<?= $u['id'] ?>" tabindex="-1">
+          <div class="modal-dialog"><div class="modal-content">
+            <form method="POST">
+              <div class="modal-header"><h5>Edit User</h5></div>
+              <div class="modal-body">
+                <input type="hidden" name="id" value="<?= $u['id'] ?>">
+                <div class="mb-3"><label>Full Name</label>
+                  <input type="text" name="full_name" class="form-control" value="<?= htmlspecialchars($u['full_name']) ?>" required>
+                </div>
+                <div class="mb-3"><label>Email</label>
+                  <input type="email" name="email" class="form-control" value="<?= htmlspecialchars($u['email']) ?>" required>
+                </div>
+                <div class="mb-3"><label>Role</label>
+                  <select name="role" class="form-select">
+                    <option value="user" <?= $u['role']=='user'?'selected':'' ?>>User</option>
+                    <option value="admin" <?= $u['role']=='admin'?'selected':'' ?>>Admin</option>
+                  </select>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="submit" name="edit_user" class="btn btn-success">Save Changes</button>
+              </div>
+            </form>
+          </div></div>
+        </div>
+        <?php endwhile; ?>
+      </tbody>
+    </table>
+  </div>
 
+  <!-- Products Section -->
+  <div class="card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4>Product List</h4>
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">+ Add Product</button>
+    </div>
+    <table class="table table-striped text-center align-middle">
+      <thead class="table-dark"><tr><th>ID</th><th>Image</th><th>Name</th><th>Price (RM)</th><th>Actions</th></tr></thead>
+      <tbody>
+        <?php while ($p = $products->fetch_assoc()): ?>
+        <tr>
+          <td><?= $p['id'] ?></td>
+          <td><img src="uploads/<?= htmlspecialchars($p['image']) ?>" width="70"></td>
+          <td><?= htmlspecialchars($p['name']) ?></td>
+          <td><?= number_format($p['price'],2) ?></td>
+          <td>
+            <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editProductModal<?= $p['id'] ?>">Edit</button>
+            <a href="?delete_product=<?= $p['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Delete this product?')">Delete</a>
+          </td>
+        </tr>
+
+        <!-- Edit Product Modal -->
+        <div class="modal fade" id="editProductModal<?= $p['id'] ?>" tabindex="-1">
+          <div class="modal-dialog"><div class="modal-content">
+            <form method="POST" enctype="multipart/form-data">
+              <div class="modal-header"><h5>Edit Product</h5></div>
+              <div class="modal-body">
+                <input type="hidden" name="id" value="<?= $p['id'] ?>">
+                <div class="mb-3"><label>Name</label>
+                  <input type="text" name="name" class="form-control" value="<?= htmlspecialchars($p['name']) ?>" required>
+                </div>
+                <div class="mb-3"><label>Description</label>
+                  <textarea name="description" class="form-control"><?= htmlspecialchars($p['description']) ?></textarea>
+                </div>
+                <div class="mb-3"><label>Price</label>
+                  <input type="number" step="0.01" name="price" class="form-control" value="<?= $p['price'] ?>" required>
+                </div>
+                <div class="mb-3"><label>Change Image (optional)</label>
+                  <input type="file" name="image" class="form-control">
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="submit" name="edit_product" class="btn btn-success">Save Changes</button>
+              </div>
+            </form>
+          </div></div>
+        </div>
+        <?php endwhile; ?>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <form method="POST">
+      <div class="modal-header"><h5>Add New User</h5></div>
+      <div class="modal-body">
+        <div class="mb-3"><label>Full Name</label><input type="text" name="full_name" class="form-control" required></div>
+        <div class="mb-3"><label>Email</label><input type="email" name="email" class="form-control" required></div>
+        <div class="mb-3"><label>Password</label><input type="password" name="password" class="form-control" required></div>
+        <div class="mb-3"><label>Role</label>
+          <select name="role" class="form-select">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="submit" name="add_user" class="btn btn-primary">Add User</button></div>
+    </form>
+  </div></div>
+</div>
+
+<!-- Add Product Modal -->
+<div class="modal fade" id="addProductModal" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <form method="POST" enctype="multipart/form-data">
+      <div class="modal-header"><h5>Add New Product</h5></div>
+      <div class="modal-body">
+        <div class="mb-3"><label>Name</label><input type="text" name="name" class="form-control" required></div>
+        <div class="mb-3"><label>Description</label><textarea name="description" class="form-control"></textarea></div>
+        <div class="mb-3"><label>Price (RM)</label><input type="number" step="0.01" name="price" class="form-control" required></div>
+        <div class="mb-3"><label>Image</label><input type="file" name="image" class="form-control" required></div>
+      </div>
+      <div class="modal-footer"><button type="submit" name="add_product" class="btn btn-primary">Add Product</button></div>
+    </form>
+  </div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

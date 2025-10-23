@@ -61,7 +61,7 @@ if (isset($_POST['remove'])) {
     <h2 class="text-center mb-4">🛒 Your Shopping Cart</h2>
 
     <?php if (!empty($_SESSION['cart'])): ?>
-      <form method="POST" id="checkoutForm">
+      <form method="POST" id="checkoutForm" action="checkout.php">
         <div class="table-responsive">
           <table class="table table-bordered align-middle">
             <thead class="table-dark text-center">
@@ -74,11 +74,11 @@ if (isset($_POST['remove'])) {
               </tr>
             </thead>
             <tbody>
-              <?php 
-                foreach ($_SESSION['cart'] as $item):
-              ?>
+              <?php foreach ($_SESSION['cart'] as $item): ?>
                 <tr class="cart-item text-center">
-                  <td><input type="checkbox" class="form-check-input select-item" data-price="<?= $item['price'] ?>"></td>
+                  <td>
+                    <input type="checkbox" class="form-check-input select-item" data-price="<?= $item['price'] ?>">
+                  </td>
                   <td><img src="<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>"></td>
                   <td><?= htmlspecialchars($item['name']) ?></td>
                   <td><?= number_format($item['price'], 2) ?></td>
@@ -96,7 +96,8 @@ if (isset($_POST['remove'])) {
 
         <div class="cart-summary mt-4 text-center">
           <h4>Total Selected: RM <span id="selectedTotal">0.00</span></h4>
-          <button type="button" id="checkoutBtn" class="btn btn-success mt-3" disabled>Proceed to Checkout</button>
+          <input type="hidden" name="selected_items" id="selectedItems">
+          <button type="submit" id="checkoutBtn" name="proceed_checkout" class="btn btn-success mt-3" disabled>Proceed to Checkout</button>
         </div>
       </form>
 
@@ -109,28 +110,26 @@ if (isset($_POST['remove'])) {
   </div>
 
   <script>
-    // Calculate total for selected items
     const checkboxes = document.querySelectorAll('.select-item');
     const totalDisplay = document.getElementById('selectedTotal');
     const checkoutBtn = document.getElementById('checkoutBtn');
+    const selectedItemsInput = document.getElementById('selectedItems');
 
-    checkboxes.forEach(cb => {
-      cb.addEventListener('change', () => {
-        let total = 0;
-        checkboxes.forEach(box => {
-          if (box.checked) {
-            total += parseFloat(box.getAttribute('data-price'));
-          }
-        });
-        totalDisplay.textContent = total.toFixed(2);
-        checkoutBtn.disabled = total === 0;
+    checkboxes.forEach(cb => cb.addEventListener('change', updateTotal));
+
+    function updateTotal() {
+      let total = 0;
+      const selected = [];
+      checkboxes.forEach(box => {
+        if (box.checked) {
+          total += parseFloat(box.getAttribute('data-price'));
+          selected.push(box.closest('tr').querySelector('td:nth-child(3)').innerText);
+        }
       });
-    });
-
-    // Simulated checkout action
-    checkoutBtn.addEventListener('click', () => {
-      alert("✅ Proceeding to checkout for selected items!");
-    });
+      totalDisplay.textContent = total.toFixed(2);
+      checkoutBtn.disabled = total === 0;
+      selectedItemsInput.value = JSON.stringify(selected);
+    }
   </script>
 
 </body>
