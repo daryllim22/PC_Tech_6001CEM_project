@@ -1,21 +1,47 @@
 <?php
 session_start();
+include 'connection.php';
 
-// Redirect if no checkout data
-if (!isset($_POST['selected_items']) || empty($_POST['selected_items'])) {
+if (empty($_SESSION['cart'])) {
     header("Location: cart.php");
     exit;
 }
 
-$selectedItems = json_decode($_POST['selected_items'], true);
-
-// Calculate total from session cart
+// ✅ Calculate total
 $total = 0;
-$cartItems = [];
 foreach ($_SESSION['cart'] as $item) {
-    if (in_array($item['name'], $selectedItems)) {
-        $cartItems[] = $item;
-        $total += $item['price'];
+    $qty = $item['qty'] ?? 1;
+    $total += $item['price'] * $qty;
+}
+
+// ✅ Handle form submission
+if (isset($_POST['place_order'])) {
+    $customer_name = trim($_POST['full_name']);
+    $customer_email = $_SESSION['user_mail'] ?? 'guest@example.com';
+    $address = trim($_POST['address']);
+    $payment = $_POST['payment_method'];
+    $order_date = date('Y-m-d H:i:s');
+    $order_items = json_encode($_SESSION['cart'], JSON_UNESCAPED_UNICODE);
+
+    $stmt = $conn->prepare("INSERT INTO orders 
+        (customer_name, customer_email, address, payment_method, order_items, total, order_date, delivery_status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'Pending')");
+    $stmt->bind_param("ssssdds", 
+        $customer_name, 
+        $customer_email, 
+        $address, 
+        $payment, 
+        $order_items, 
+        $total, 
+        $order_date
+    );
+
+    if ($stmt->execute()) {
+        unset($_SESSION['cart']);
+        header("Location: order_success.php");
+        exit;
+    } else {
+        echo "<script>alert('❌ Order failed to save. Please try again.');</script>";
     }
 }
 ?>
@@ -24,150 +50,183 @@ foreach ($_SESSION['cart'] as $item) {
 <head>
   <meta charset="UTF-8">
   <title>Checkout - PC Tech</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
   <style>
-    body { background-color: #f8f9fa; }
-    .checkout-container { max-width: 750px; margin: 50px auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
-    .item-img { height: 70px; border-radius: 10px; }
-    .payment-section { display: none; margin-top: 15px; }
+    .payment-details { display: none; }
   </style>
 </head>
 <body>
 
-  <!-- Navbar -->
-  <nav class="navbar d-flex justify-content-center gap-4 py-2 bg-light">
-    <a href="home.php"><img src="images/logo.jpg" alt="PC Tech Logo" style="height: 60px;"></a>
-    <a href="home.php"><img src="images/home.png" alt="Home"></a>
-    <a href="product.php"><img src="images/product.png" alt="Products"></a>
-    <a href="cart.php"><img src="images/cart.png" alt="Cart"></a>
-    <a href="profile.php"><img src="images/user_profile.png" alt="Profile"></a>
-    <a href="logout.php"><img src="images/logout.png" alt="Logout"></a>
-  </nav>
+<header class="header-logo text-center py-3 bg-white shadow-sm">
+  <img src="images/logo.png" alt="PC Tech Logo" style="max-width:200px; height:auto;">
+</header>
 
-  <div class="checkout-container">
-    <h2 class="text-center mb-4">Checkout Summary</h2>
+<nav class="navbar d-flex justify-content-center gap-4 py-2 bg-light shadow-sm">
+  <a href="home.php"><img src="images/home.png" alt="Home"></a>
+  <a href="product.php"><img src="images/product.png" alt="Products"></a>
+  <a href="cart.php"><img src="images/cart.png" alt="Cart"></a>
+  <a href="order_history.php"><img src="images/history.png" alt="Orders"></a>
+  <a href="profile.php"><img src="images/user_profile.png" alt="Profile"></a>
+  <a href="logout.php"><img src="images/logout.png" alt="Logout"></a>
+</nav>
 
-    <table class="table table-bordered text-center align-middle">
-      <thead class="table-dark">
-        <tr>
-          <th>Image</th>
-          <th>Item</th>
-          <th>Price (RM)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach ($cartItems as $item): ?>
-        <tr>
-          <td><img src="<?= htmlspecialchars($item['image']) ?>" alt="<?= htmlspecialchars($item['name']) ?>" class="item-img"></td>
-          <td><?= htmlspecialchars($item['name']) ?></td>
-          <td><?= number_format($item['price'], 2) ?></td>
-        </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
+<div style="margin-top:160px;"></div>
 
-    <div class="text-end fs-5 fw-bold mt-3">Total: RM <?= number_format($total, 2) ?></div>
-    <hr>
+<div class="container py-5">
+  <h2 class="text-center mb-4">Checkout</h2>
 
-    <h5 class="mt-4 mb-3">Customer Information</h5>
-    <form method="POST" action="checkout_success.php">
-      <div class="mb-3">
-        <label class="form-label">Full Name</label>
-        <input type="text" name="name" class="form-control" placeholder="Enter your name" required>
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Email</label>
-        <input type="email" name="email" class="form-control" placeholder="Enter your email" required>
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Shipping Address</label>
-        <textarea name="address" class="form-control" rows="3" placeholder="Enter your full address" required></textarea>
-      </div>
-
-      <h5 class="mt-4">Payment Method</h5>
-      <div class="form-check">
-        <input class="form-check-input" type="radio" name="payment_method" id="creditCardOption" value="Credit Card" required>
-        <label class="form-check-label" for="creditCardOption">Credit Card</label>
-      </div>
-      <div class="form-check">
-        <input class="form-check-input" type="radio" name="payment_method" id="onlineBankingOption" value="Online Banking" required>
-        <label class="form-check-label" for="onlineBankingOption">Online Banking</label>
-      </div>
-      <div class="form-check">
-        <input class="form-check-input" type="radio" name="payment_method" id="codOption" value="Cash on Delivery" required>
-        <label class="form-check-label" for="codOption">Cash on Delivery</label>
-      </div>
-
-      <!-- Credit Card Section -->
-      <div id="creditCardSection" class="payment-section">
-        <div class="mb-3 mt-3">
-          <label class="form-label">Card Number</label>
-          <input type="text" class="form-control" name="card_number" placeholder="xxxx-xxxx-xxxx-xxxx" maxlength="19">
-        </div>
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Expiry Date</label>
-            <input type="text" class="form-control" name="expiry_date" placeholder="MM/YY" maxlength="5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-sm p-4">
+        <form method="post" id="checkoutForm" onsubmit="return validatePayment();">
+          <div class="mb-3">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="full_name" class="form-control" required>
           </div>
-          <div class="col-md-6 mb-3">
-            <label class="form-label">CVV</label>
-            <input type="text" class="form-control" name="cvv" placeholder="123" maxlength="3">
+
+          <div class="mb-3">
+            <label class="form-label">Address</label>
+            <textarea name="address" class="form-control" rows="3" required></textarea>
           </div>
-        </div>
+
+          <div class="mb-3">
+            <label class="form-label">Phone Number</label>
+            <input type="text" name="phone" class="form-control" pattern="[0-9]{8,}" title="Enter at least 8 digits" required>
+          </div>
+
+          <!-- ✅ Payment Method -->
+          <div class="mb-3">
+            <label class="form-label">Payment Method</label>
+            <select name="payment_method" id="payment_method" class="form-select" required>
+              <option value="">Select Payment Method</option>
+              <option value="Credit Card">Credit Card</option>
+              <option value="Online Banking">Online Banking</option>
+              <option value="Cash on Delivery">Cash on Delivery</option>
+            </select>
+          </div>
+
+          <!-- ✅ Credit Card Details -->
+          <div id="creditCardDetails" class="payment-details">
+            <div class="mb-3">
+              <label class="form-label">Card Number</label>
+              <input type="text" name="card_number" id="card_number" class="form-control" 
+                     placeholder="16-digit Card Number" pattern="[0-9]{16}" 
+                     title="Card number must be exactly 16 digits">
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Expiry Date (MM/YY)</label>
+                <input type="text" name="expiry" id="expiry" class="form-control" 
+                       placeholder="MM/YY" maxlength="5" 
+                       pattern="^(0[1-9]|1[0-2])\/\d{2}$" 
+                       title="Enter expiry date in MM/YY format (e.g. 09/29)">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">CVV</label>
+                <input type="text" name="cvv" id="cvv" class="form-control" 
+                       placeholder="123" pattern="[0-9]{3}" 
+                       title="CVV must be exactly 3 digits">
+              </div>
+            </div>
+          </div>
+
+          <!-- ✅ Online Banking Details -->
+          <div id="onlineBankDetails" class="payment-details">
+            <div class="mb-3">
+              <label class="form-label">Select Bank</label>
+              <select name="bank" id="bank" class="form-select">
+                <option value="">Choose Bank</option>
+                <option value="Maybank">Maybank</option>
+                <option value="CIMB">CIMB</option>
+                <option value="RHB">RHB</option>
+                <option value="Public Bank">Public Bank</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Account Number</label>
+              <input type="text" name="bank_acc" id="bank_acc" class="form-control" pattern="[0-9]{8,}" 
+                     title="Enter a valid bank account number (min 8 digits)">
+            </div>
+          </div>
+
+          <!-- ✅ COD Note -->
+          <div id="codNote" class="payment-details">
+            <p class="text-muted mt-3">💵 Please prepare the exact cash amount upon delivery.</p>
+          </div>
+
+          <h5 class="text-end text-primary mb-3">
+            Total: RM <?= number_format($total, 2); ?>
+          </h5>
+
+          <div class="text-center">
+            <button type="submit" name="place_order" class="btn btn-success px-5">Place Order</button>
+          </div>
+        </form>
       </div>
-
-      <!-- Online Banking Section -->
-      <div id="onlineBankingSection" class="payment-section">
-        <div class="mb-3 mt-3">
-          <label class="form-label">Select Bank</label>
-          <select name="bank" class="form-select">
-            <option value="">-- Select Your Bank --</option>
-            <option value="Maybank">Maybank</option>
-            <option value="CIMB">CIMB Bank</option>
-            <option value="Public Bank">Public Bank</option>
-            <option value="RHB">RHB Bank</option>
-            <option value="Hong Leong">Hong Leong Bank</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Cash on Delivery Section -->
-      <div id="codSection" class="payment-section">
-        <p class="mt-3 text-muted">💵 Please prepare exact cash upon delivery. No advance payment required.</p>
-      </div>
-
-      <input type="hidden" name="total" value="<?= $total ?>">
-      <input type="hidden" name="items" value='<?= json_encode($cartItems) ?>'>
-
-      <button type="submit" class="btn btn-success w-100 mt-4">Confirm Purchase</button>
-    </form>
+    </div>
   </div>
+</div>
 
-  <script>
-    // Toggle payment fields
-    const credit = document.getElementById("creditCardOption");
-    const bank = document.getElementById("onlineBankingOption");
-    const cod = document.getElementById("codOption");
+<!-- ✅ SCRIPT: Show/hide + Validate -->
+<script>
+document.getElementById('payment_method').addEventListener('change', function() {
+  document.querySelectorAll('.payment-details').forEach(el => el.style.display = 'none');
+  if (this.value === 'Credit Card') document.getElementById('creditCardDetails').style.display = 'block';
+  if (this.value === 'Online Banking') document.getElementById('onlineBankDetails').style.display = 'block';
+  if (this.value === 'Cash on Delivery') document.getElementById('codNote').style.display = 'block';
+});
 
-    const creditSection = document.getElementById("creditCardSection");
-    const bankSection = document.getElementById("onlineBankingSection");
-    const codSection = document.getElementById("codSection");
+function validatePayment() {
+  const method = document.getElementById('payment_method').value;
 
-    const sections = [creditSection, bankSection, codSection];
+  if (method === 'Credit Card') {
+    const card = document.getElementById('card_number').value.trim();
+    const cvv = document.getElementById('cvv').value.trim();
+    const expiry = document.getElementById('expiry').value.trim();
 
-    function hideAll() {
-      sections.forEach(sec => sec.style.display = "none");
+    if (!/^\d{16}$/.test(card)) {
+      alert("Card number must be exactly 16 digits.");
+      return false;
     }
 
-    document.querySelectorAll("input[name='payment_method']").forEach(option => {
-      option.addEventListener("change", () => {
-        hideAll();
-        if (credit.checked) creditSection.style.display = "block";
-        else if (bank.checked) bankSection.style.display = "block";
-        else if (cod.checked) codSection.style.display = "block";
-      });
-    });
-  </script>
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(expiry)) {
+      alert("Expiry date must be in MM/YY format (e.g. 09/29).");
+      return false;
+    }
+
+    const [mm, yy] = expiry.split('/');
+    const expDate = new Date(`20${yy}`, mm);
+    const now = new Date();
+    if (expDate <= now) {
+      alert("Expiry date must be in the future.");
+      return false;
+    }
+
+    if (!/^\d{3}$/.test(cvv)) {
+      alert("CVV must be exactly 3 digits.");
+      return false;
+    }
+  }
+
+  if (method === 'Online Banking') {
+    const bank = document.getElementById('bank').value;
+    const acc = document.getElementById('bank_acc').value.trim();
+
+    if (!bank) {
+      alert("Please select your bank.");
+      return false;
+    }
+    if (!/^\d{8,}$/.test(acc)) {
+      alert("Bank account number must have at least 8 digits.");
+      return false;
+    }
+  }
+
+  return true;
+}
+</script>
 
 </body>
 </html>

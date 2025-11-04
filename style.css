@@ -1,105 +1,182 @@
-/* General body styling */
+/* ------------------------------
+   General Page Styling
+------------------------------ */
 body {
-    margin: 0;
-    padding: 0;
-    height: 100vh;
-    display: flex;
-    background-image: url("images/bg.png");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-    font-family: Arial, sans-serif;
+  background-color: #f8f9fa;
+  font-family: "Segoe UI", Arial, sans-serif;
+  margin: 0;
+  padding: 0;
 }
 
-/* Sidebar navigation */
+/* ------------------------------
+   Header and Navbar Styling
+------------------------------ */
+.header-logo {
+  background-color: #ffffff;
+  text-align: center;
+  padding: 15px 0;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1030;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.header-logo img {
+  height: auto;
+  max-width: 200px;
+}
+
 .navbar {
-    background-color: rgba(255, 255, 255, 0.8);
-    padding: 20px 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center; /* center all buttons vertically */
-    gap: 10px;
-    width: 120px;
-    height: 100vh;
-}
-
-.navbar a {
-    background-color: #f2f4d7;
-    border-radius: 6px;
-    padding: 8px;
-    text-align: center;
-    color: #333;
-    text-decoration: none;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.navbar a:hover {
-    background-color: #e0e6b8;
-    transform: scale(1.05);
+  position: fixed;
+  top: 100px;
+  width: 100%;
+  background-color: #f8f9fa;
+  z-index: 1020;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
 .navbar img {
-    width: 35px;
-    height: 35px;
-    margin-bottom: 5px;
-    display: block;
+  height: 40px;
+  transition: transform 0.2s ease, filter 0.2s ease;
 }
 
-/* Main content area */
-.content {
-    flex: 1;
-    padding: 30px;
-    overflow-y: auto;
+.navbar img:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
 }
 
-/* Event card styles (shared by events.php and past_events.php) */
+/* Spacing for fixed header and nav */
+.page-spacing {
+  margin-top: 160px;
+}
+
+/* ------------------------------
+   Buttons
+------------------------------ */
+.shop-now-btn {
+  background-color: #0d6efd;
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  font-size: 1.1rem;
+  border-radius: 6px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.shop-now-btn:hover {
+  background-color: #084298;
+  transform: scale(1.05);
+}
+
+/* ------------------------------
+   Product Page Filters
+------------------------------ */
+form.row.g-3.mb-4.justify-content-center {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 15px 25px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+form input.form-control {
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+form input.form-control:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 5px rgba(13, 110, 253, 0.3);
+}
+
+form select.form-select {
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+form select.form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 5px rgba(13, 110, 253, 0.3);
+}
+
+form button.btn-primary {
+  background-color: #0d6efd;
+  border: none;
+  border-radius: 6px;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+form button.btn-primary:hover {
+  background-color: #084298;
+  transform: scale(1.05);
+}
+
+/* ------------------------------
+   Cards (Products, Profile, Orders)
+------------------------------ */
 .card {
-    border-radius: 10px;
-    transition: transform 0.3s, box-shadow 0.3s;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-    cursor: pointer;
+  transform: translateY(-5px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
 }
 
-.card-img-top {
-    height: 220px; /* fixed height for uniformity */
-    object-fit: cover; /* crops image nicely */
-    border-bottom: 3px solid #dee2e6;
-    border-radius: 10px 10px 0 0;
+.card img {
+  border-radius: 10px;
 }
 
-/* Card content */
-.card-body {
-    text-align: center;
+/* ------------------------------
+   Tables (Cart, Orders)
+------------------------------ */
+.table {
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.card-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 5px;
-    color: #333;
+.table thead {
+  background-color: #0d6efd;
+  color: white;
 }
 
-.card-text {
-    font-size: 0.9rem;
-    color: #6c757d;
+.table tbody tr:hover {
+  background-color: #f1f5ff;
 }
 
-/* Modal poster */
-.modal-poster {
-    width: 100%;
-    max-height: 400px;
-    object-fit: contain;
-    margin-bottom: 15px;
+/* ------------------------------
+   Carousel Styling
+------------------------------ */
+.carousel-wrapper {
+  max-width: 850px;
+  margin: 0 auto;
 }
 
-/* Adjust row spacing */
-.row {
-    margin-left: 0;
-    margin-right: 0;
+#carouselImage {
+  height: 400px;
+  object-fit: contain;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+/* ------------------------------
+   Responsive Fixes
+------------------------------ */
+@media (max-width: 768px) {
+  .navbar img {
+    height: 35px;
+  }
+
+  .header-logo img {
+    max-width: 160px;
+  }
+
+  form.row.g-3.mb-4.justify-content-center {
+    padding: 10px 15px;
+  }
 }

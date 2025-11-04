@@ -1,0 +1,15 @@
+PC TECH - SALES REPORT
+
+Total Sales: RM 109,995.00
+
+Order ID  Customer            Email                    Payment     Total(RM)   Status      Date
+----------------------------------------------------------------------------------------------------
+7         Test Lim            test123@gmail.com        Cash on De  6,999.00    Shipped     2025-10-31 01:53:39
+6         Hanina              han@gmail.com            Credit Car  0.00        Pending     2025-10-29 15:40:56
+5         Test Lim            test123@gmail.com        Online Ban  31,999.00   Cancelled   2025-10-29 15:30:10
+4         Test Lim            test123@gmail.com        Cash on De  6,999.00    Pending     2025-10-29 15:13:58
+3         Test Lim            test123@gmail.com        Credit Car  31,999.00   Delivered   2025-10-29 12:52:39
+2         Te                  test123@gmail.com        Cash on De  31,999.00   Pending     2025-10-29 12:36:54
+1         Test Lim            test123@gmail.com        Online Ban  31,999.00   Pending     2025-10-29 11:48:57
+
+Generated on: 2025-11-03 09:28:37
