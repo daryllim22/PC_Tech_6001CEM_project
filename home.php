@@ -14,19 +14,80 @@ $full_name = $_SESSION['full_name'] ?? 'User';
   <title>Home - PC Tech</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background-color: #f8f9fa;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* ✅ Navbar styling with centered logo */
+    .navbar-icons {
+      background-color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 30px;
+      padding: 10px 0;
+      border-bottom: 2px solid #eaeaea;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .navbar-icons a img {
+      width: 40px;
+      height: 40px;
+      transition: transform 0.2s;
+    }
+    .navbar-icons a:hover img {
+      transform: scale(1.1);
+    }
+    .navbar-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .navbar-logo img {
+      width: 130px;
+      height: auto;
+      margin: 0 15px;
+    }
+
+    /* ✅ Main content */
+    .container h1 {
+      font-weight: 600;
+      color: #333;
+    }
+    .shop-now-btn {
+      display: inline-block;
+      padding: 12px 25px;
+      background-color: #007bff;
+      color: white;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 18px;
+      font-weight: 500;
+      transition: background-color 0.3s;
+    }
+    .shop-now-btn:hover {
+      background-color: #0056b3;
+    }
+  </style>
 </head>
 <body>
 
-<!-- ✅ LOGO AT TOP -->
-<header class="header-logo text-center py-3 bg-white shadow-sm">
-  <img src="images/logo.png" alt="PC Tech Logo" style="max-width:200px; height:auto;">
-</header>
-
-<!-- ✅ NAVBAR BELOW LOGO -->
-<nav class="navbar d-flex justify-content-center gap-4 py-2 bg-light shadow-sm">
+<!-- ✅ NAVBAR (with centered logo) -->
+<nav class="navbar-icons">
   <a href="home.php"><img src="images/home.png" alt="Home"></a>
   <a href="product.php"><img src="images/product.png" alt="Products"></a>
   <a href="cart.php"><img src="images/cart.png" alt="Cart"></a>
+
+  <!-- ✅ Centered Logo -->
+  <div class="navbar-logo">
+    <a href="home.php"><img src="images/logo.png" alt="PC Tech Logo"></a>
+  </div>
+
   <a href="order_history.php"><img src="images/history.png" alt="Orders"></a>
   <a href="profile.php"><img src="images/user_profile.png" alt="Profile"></a>
   <a href="logout.php"><img src="images/logout.png" alt="Logout"></a>

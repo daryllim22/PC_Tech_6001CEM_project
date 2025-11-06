@@ -58,18 +58,22 @@ if (isset($_POST['place_order'])) {
 </head>
 <body>
 
-<header class="header-logo text-center py-3 bg-white shadow-sm">
-  <img src="images/logo.png" alt="PC Tech Logo" style="max-width:200px; height:auto;">
-</header>
-
-<nav class="navbar d-flex justify-content-center gap-4 py-2 bg-light shadow-sm">
+<!-- ✅ NAVBAR (with centered logo) -->
+<nav class="navbar-icons">
   <a href="home.php"><img src="images/home.png" alt="Home"></a>
   <a href="product.php"><img src="images/product.png" alt="Products"></a>
   <a href="cart.php"><img src="images/cart.png" alt="Cart"></a>
+
+  <!-- ✅ Centered Logo -->
+  <div class="navbar-logo">
+    <a href="home.php"><img src="images/logo.png" alt="PC Tech Logo"></a>
+  </div>
+
   <a href="order_history.php"><img src="images/history.png" alt="Orders"></a>
   <a href="profile.php"><img src="images/user_profile.png" alt="Profile"></a>
   <a href="logout.php"><img src="images/logout.png" alt="Logout"></a>
 </nav>
+
 
 <div style="margin-top:160px;"></div>
 

@@ -6,6 +6,7 @@ if (!isset($_GET['id'])) {
 }
 $order_id = intval($_GET['id']);
 
+// ✅ Fetch order details
 $stmt = $conn->prepare("SELECT * FROM orders WHERE id = ?");
 $stmt->bind_param("i", $order_id);
 $stmt->execute();
@@ -15,7 +16,16 @@ if (!$order) {
     die("Order not found.");
 }
 
-$items = json_decode($order['order_items'], true);
+// ✅ Fetch ordered items from order_items table
+$itemQuery = $conn->prepare("
+    SELECT p.name, oi.price, oi.quantity 
+    FROM order_items oi
+    JOIN products p ON oi.product_id = p.id
+    WHERE oi.order_id = ?
+");
+$itemQuery->bind_param("i", $order_id);
+$itemQuery->execute();
+$items = $itemQuery->get_result();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -23,69 +33,20 @@ $items = json_decode($order['order_items'], true);
   <meta charset="UTF-8">
   <title>Invoice #<?= $order_id ?> - PC Tech</title>
   <style>
-    @media print {
-      .no-print { display: none; }
-    }
-    body {
-      font-family: Arial, sans-serif;
-      padding: 40px;
-      background-color: #f8f9fa;
-    }
-    .invoice-container {
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      padding: 30px;
-      max-width: 750px;
-      margin: auto;
-    }
-    .header {
-      text-align: center;
-      border-bottom: 2px solid #007bff;
-      padding-bottom: 15px;
-      margin-bottom: 25px;
-    }
-    .header img {
-      width: 120px;
-    }
-    .header h2 {
-      margin-top: 10px;
-      color: #007bff;
-    }
-    .info p { margin: 5px 0; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
-    th, td {
-      border: 1px solid #999;
-      padding: 10px;
-      text-align: left;
-    }
-    th { background: #007bff; color: white; }
-    tr:nth-child(even) { background: #f9f9f9; }
-    .total {
-      text-align: right;
-      font-weight: bold;
-      margin-top: 20px;
-      font-size: 1.1rem;
-    }
-    .footer {
-      text-align: center;
-      font-size: 0.9em;
-      margin-top: 40px;
-      color: #555;
-    }
-    .btn-download {
-      display: inline-block;
-      margin-top: 20px;
-      padding: 10px 20px;
-      background: #007bff;
-      color: white;
-      border-radius: 5px;
-      text-decoration: none;
-    }
+    @media print {.no-print { display: none; }}
+    body {font-family: Arial, sans-serif; padding: 40px; background-color: #f8f9fa;}
+    .invoice-container {background: white; border: 1px solid #ccc; border-radius: 10px; padding: 30px; max-width: 750px; margin: auto;}
+    .header {text-align: center; border-bottom: 2px solid #007bff; padding-bottom: 15px; margin-bottom: 25px;}
+    .header img {width: 120px;}
+    .header h2 {margin-top: 10px; color: #007bff;}
+    .info p {margin: 5px 0;}
+    table {width: 100%; border-collapse: collapse; margin-top: 15px;}
+    th, td {border: 1px solid #999; padding: 10px; text-align: left;}
+    th {background: #007bff; color: white;}
+    tr:nth-child(even) {background: #f9f9f9;}
+    .total {text-align: right; font-weight: bold; margin-top: 20px; font-size: 1.1rem;}
+    .footer {text-align: center; font-size: 0.9em; margin-top: 40px; color: #555;}
+    .btn-download {display: inline-block; margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; border-radius: 5px; text-decoration: none;}
   </style>
 </head>
 <body>
@@ -114,18 +75,17 @@ $items = json_decode($order['order_items'], true);
     </tr>
     <?php 
     $total = 0;
-    foreach ($items as $item): 
-        $qty = $item['qty'] ?? 1;
-        $subtotal = $item['price'] * $qty;
+    while ($item = $items->fetch_assoc()):
+        $subtotal = $item['price'] * $item['quantity'];
         $total += $subtotal;
     ?>
     <tr>
       <td><?= htmlspecialchars($item['name']); ?></td>
       <td><?= number_format($item['price'], 2); ?></td>
-      <td><?= $qty; ?></td>
+      <td><?= $item['quantity']; ?></td>
       <td><?= number_format($subtotal, 2); ?></td>
     </tr>
-    <?php endforeach; ?>
+    <?php endwhile; ?>
   </table>
 
   <p class="total">Total Amount: RM <?= number_format($total, 2); ?></p>

@@ -75,20 +75,9 @@ $result = $conn->query($query);
 </head>
 <body>
 
-<!-- ✅ LOGO HEADER -->
-<header class="header-logo text-center py-3 bg-white shadow-sm">
-  <img src="images/logo.png" alt="PC Tech Logo" style="max-width:200px; height:auto;">
-</header>
+<?php include 'navbar.php'; ?>
 
-<!-- ✅ NAVBAR -->
-<nav class="navbar d-flex justify-content-center gap-4 py-2 bg-light shadow-sm">
-  <a href="home.php"><img src="images/home.png" alt="Home"></a>
-  <a href="product.php"><img src="images/product.png" alt="Products"></a>
-  <a href="cart.php"><img src="images/cart.png" alt="Cart"></a>
-  <a href="order_history.php"><img src="images/history.png" alt="Orders"></a>
-  <a href="profile.php"><img src="images/user_profile.png" alt="Profile"></a>
-  <a href="logout.php"><img src="images/logout.png" alt="Logout"></a>
-</nav>
+
 
 <div style="margin-top:160px;"></div>
 
@@ -131,7 +120,7 @@ $result = $conn->query($query);
         <?php
           $id = $row['id'];
           $name = htmlspecialchars($row['name']);
-          $desc = $row['description']; // keep original text
+          $desc = $row['description'];
           $price = number_format($row['price'], 2);
           $img = 'images/' . htmlspecialchars($row['image']);
           $cat = htmlspecialchars($row['category']);
@@ -190,7 +179,18 @@ $result = $conn->query($query);
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-// Show alert message
+// Maintain scroll position across actions
+let lastScroll = 0;
+window.addEventListener('scroll', () => lastScroll = window.scrollY);
+
+// Prevent scroll jump after modal close
+document.querySelectorAll('.modal').forEach(modal => {
+  modal.addEventListener('hidden.bs.modal', () => {
+    window.scrollTo(0, lastScroll);
+  });
+});
+
+// Show alert message (no scroll reset)
 function showAlert(message, type='success') {
   const alertBox = document.getElementById('alertBox');
   alertBox.textContent = message;
@@ -203,9 +203,12 @@ function showAlert(message, type='success') {
   }, 2000);
 }
 
-// AJAX Add to Cart
+// AJAX Add to Cart (no reload, no scroll reset)
 document.querySelectorAll('.addToCartBtn').forEach(btn => {
-  btn.addEventListener('click', function() {
+  btn.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+
     const formData = new FormData();
     formData.append('ajax_add_to_cart', '1');
     formData.append('id', this.dataset.id);
@@ -215,7 +218,10 @@ document.querySelectorAll('.addToCartBtn').forEach(btn => {
 
     fetch('product.php', { method: 'POST', body: formData })
       .then(res => res.json())
-      .then(data => showAlert(data.message, data.status))
+      .then(data => {
+        showAlert(data.message, data.status);
+        window.scrollTo(0, lastScroll); // restore scroll position
+      })
       .catch(err => console.error(err));
   });
 });

@@ -51,19 +51,51 @@ if (isset($_POST['update_password'])) {
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <style>
-    body { background-color: #f8f9fa; }
-    .eye-btn {
-      border: 1px solid #ced4da;
-      border-left: 0;
+    body { background-color: #f8f9fa; margin:0; padding:0; }
+
+    /* ✅ Identical navbar design as home.php */
+    .navbar-icons {
+      background-color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 30px;
+      padding: 10px 0;
+      border-bottom: 2px solid #eaeaea;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
+    .navbar-icons a img {
+      width: 40px;
+      height: 40px;
+      transition: transform 0.2s;
+    }
+    .navbar-icons a:hover img {
+      transform: scale(1.1);
+    }
+    .navbar-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .navbar-logo img {
+      width: 130px;
+      height: auto;
+      margin: 0 15px;
+    }
+
+    /* ✅ Profile content */
+    .eye-btn { border: 1px solid #ced4da; border-left: 0; }
     .password-requirements {
       font-size: 0.9em;
-      color: #000; /* neutral color */
+      color: #000;
     }
     .password-requirements li {
       list-style: none;
       margin-left: -20px;
-      color: #000; /* start in black */
+      color: #000;
     }
     .valid { color: green !important; }
     .invalid { color: red !important; }
@@ -71,16 +103,17 @@ if (isset($_POST['update_password'])) {
 </head>
 <body>
 
-<!-- ✅ LOGO AT TOP (same as home.php) -->
-<header class="header-logo text-center py-3 bg-white shadow-sm">
-  <img src="images/logo.png" alt="PC Tech Logo" style="max-width:200px; height:auto;">
-</header>
-
-<!-- ✅ NAVBAR BELOW LOGO (same as home.php) -->
-<nav class="navbar d-flex justify-content-center gap-4 py-2 bg-light shadow-sm">
+<!-- ✅ NAVBAR (identical to Home) -->
+<nav class="navbar-icons">
   <a href="home.php"><img src="images/home.png" alt="Home"></a>
   <a href="product.php"><img src="images/product.png" alt="Products"></a>
   <a href="cart.php"><img src="images/cart.png" alt="Cart"></a>
+
+  <!-- Centered Logo -->
+  <div class="navbar-logo">
+    <a href="home.php"><img src="images/logo.png" alt="PC Tech Logo"></a>
+  </div>
+
   <a href="order_history.php"><img src="images/history.png" alt="Orders"></a>
   <a href="profile.php"><img src="images/user_profile.png" alt="Profile"></a>
   <a href="logout.php"><img src="images/logout.png" alt="Logout"></a>
@@ -152,7 +185,7 @@ if (isset($_POST['update_password'])) {
   </div>
 </div>
 
-<!-- ✅ SCRIPTS -->
+<!-- ✅ Scripts -->
 <script>
 function toggleVisibility(id, btn) {
   const input = document.getElementById(id);
@@ -176,7 +209,7 @@ passwordInput.addEventListener('input', () => {
 
 function updateRequirement(el, valid, text) {
   if (passwordInput.value.length === 0) {
-    el.style.color = "#000"; // stays black when empty
+    el.style.color = "#000";
     el.textContent = "• " + text;
   } else {
     el.style.color = valid ? "green" : "red";
