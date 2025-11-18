@@ -185,6 +185,9 @@ if (isset($_POST['update_password'])) {
   </div>
 </div>
 
+<?php include 'footer.php'; ?>
+
+
 <!-- ✅ Scripts -->
 <script>
 function toggleVisibility(id, btn) {

@@ -97,23 +97,33 @@ foreach ($_SESSION['cart'] as $item) {
   <?php endif; ?>
 </div>
 
+<?php include 'footer.php'; ?>
+
+
 <!-- ✅ JS: Handle cart updates without refresh -->
 <script>
 document.querySelectorAll('.qty-input').forEach(input => {
   input.addEventListener('change', function() {
     const row = this.closest('tr');
     const id = row.dataset.id;
-    const qty = this.value;
+    const qty = Math.max(1, parseInt(this.value));
 
     fetch('cart.php', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({ action: 'update_qty', id, qty })
-    }).then(() => {
-      const price = parseFloat(row.children[2].textContent);
-      const subtotal = price * qty;
-      row.querySelector('.subtotal').textContent = subtotal.toFixed(2);
-      updateTotal();
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === 'success') {
+        // ✅ Update the subtotal cell
+        const price = parseFloat(row.children[2].textContent.replace(/[^\d.]/g, ""));
+        const subtotal = price * qty;
+        row.querySelector('.subtotal').textContent = subtotal.toFixed(2);
+
+        // ✅ Recalculate overall total
+        updateTotal();
+      }
     });
   });
 });
@@ -127,11 +137,15 @@ document.querySelectorAll('.remove-btn').forEach(btn => {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({ action: 'remove', id })
-    }).then(() => {
-      row.remove();
-      updateTotal();
-      if (document.querySelectorAll('#cartTable tbody tr').length === 0)
-        location.reload(); // Show "empty" message
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === 'success') {
+        row.remove();
+        updateTotal();
+        if (document.querySelectorAll('#cartTable tbody tr').length === 0)
+          location.reload(); // refresh when empty
+      }
     });
   });
 });
@@ -139,11 +153,13 @@ document.querySelectorAll('.remove-btn').forEach(btn => {
 function updateTotal() {
   let total = 0;
   document.querySelectorAll('#cartTable tbody tr').forEach(row => {
-    total += parseFloat(row.querySelector('.subtotal').textContent);
+    const subtotalText = row.querySelector('.subtotal').textContent.replace(/[^\d.]/g, "");
+    total += parseFloat(subtotalText || 0);
   });
   document.getElementById('totalAmount').textContent = "RM " + total.toFixed(2);
 }
 </script>
+
 
 </body>
 </html>
