@@ -131,7 +131,6 @@ $full_name = $_SESSION['full_name'] ?? 'User';
   const images = [
     'images/black-friday-sale.jpg',
     'images/cyber-monday-discount-sale.jpg',
-    'images/new-arrivals.jpg'
   ];
   let currentIndex = 0;
   function showImage(i){ document.getElementById('carouselImage').src = images[i]; }
